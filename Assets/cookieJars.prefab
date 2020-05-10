@@ -226,6 +226,7 @@ GameObject:
   - component: {fileID: 114906446637080784}
   - component: {fileID: 114268968184938564}
   - component: {fileID: 114961568918720930}
+  - component: {fileID: 114207375352762146}
   m_Layer: 0
   m_Name: cookieJars
   m_TagString: Untagged
@@ -1496,6 +1497,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShaderNames:
   - KT/Blend Lit and Unlit
+--- !u!114 &114207375352762146
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1494891251723984}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03b456d20b351c24595c23a27042d042, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114237508690686978
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1768,6 +1780,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Module: {fileID: 114268968184938564}
+  Boss: {fileID: 114207375352762146}
   Audio: {fileID: 114792527877855124}
   Info: {fileID: 114906446637080784}
   jar: {fileID: 114543844577411362}

@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using KModkit;
 using System.Linq;
+using System.Text.RegularExpressions;
 
-public class cookieJarsScript : MonoBehaviour {
+public class cookieJarsScript : MonoBehaviour
+{
 
     public KMBombModule Module;
+    public KMBossModule Boss;
     public KMAudio Audio;
     public KMBombInfo Info;
     public KMSelectable jar, left, right;
@@ -32,9 +35,11 @@ public class cookieJarsScript : MonoBehaviour {
     private int highestCookie = 0, secondHighestCookie = 0, lowestCookie;
 
     int solves = 0;
-    private readonly string[] ignoredModules = { "Forget Me Not", "Forget Everything", "Souvenir", "The Time Keeper", "Turn the Key", "The Swan", "Simon's Stages", "Cookie Jars" };
-    
-    void Start () {
+    private readonly string[] ignoredModulesList = { "Forget Me Not", "Forget Everything", "Souvenir", "The Time Keeper", "Turn the Key", "The Swan", "Simon's Stages", "Cookie Jars" };
+    private string[] ignoredModules { get { return Boss.GetIgnoredModules(Module, ignoredModulesList); } }
+
+    void Start()
+    {
         _moduleId = _moduleIdCounter++;
         Module.OnActivate += SetUpButtons;
 
@@ -87,27 +92,13 @@ public class cookieJarsScript : MonoBehaviour {
 
     void EatCookie()
     {
-        int solvedModules = 0, solvableModules = 0;
-
-        foreach (var module in Info.GetSolvedModuleNames())
-        {
-            if (!ignoredModules.Contains(module))
-            {
-                solvedModules++;
-            }
-        }
-
-        foreach (var module in Info.GetSolvableModuleNames())
-        {
-            if (!ignoredModules.Contains(module))
-            {
-                solvableModules++;
-            }
-        }
+        var allSolved = Info.GetSolvedModuleNames();
+        var solvedModules = allSolved.Except(ignoredModules).Count();
+        var solvableModules = Info.GetSolvableModuleNames().Except(ignoredModules).Count();
 
         if ((solvedModules == solvableModules || hunger != 0) && cookieAmounts[shownJar] > 0)
         {
-            CheckCookies();
+            CheckCookies(allSolved.Count);
 
             if (correctBtns[shownJar])
             {
@@ -139,7 +130,7 @@ public class cookieJarsScript : MonoBehaviour {
                 {
                     cookieAmountText.text = "[ " + cookieAmounts[shownJar] + " cookies! :) ]";
                 }
-                
+
                 if (cookieAmounts[0] == 0 && cookieAmounts[1] == 0 && cookieAmounts[2] == 0)
                 {
                     Module.HandlePass();
@@ -263,9 +254,9 @@ public class cookieJarsScript : MonoBehaviour {
             cookieAmounts[2] = slightlyLessAccurateAverageCookies;
         }
 
-    // *starts 967 module bomb*
-    // *gets 290 cookies* 
-    // *https://i.kym-cdn.com/entries/icons/original/000/027/475/Screen_Shot_2018-10-25_at_11.02.15_AM.png*
+        // *starts 967 module bomb*
+        // *gets 290 cookies* 
+        // *https://i.kym-cdn.com/entries/icons/original/000/027/475/Screen_Shot_2018-10-25_at_11.02.15_AM.png*
 
         if (cookieAmounts[2] == 0)
         {
@@ -307,7 +298,7 @@ public class cookieJarsScript : MonoBehaviour {
         Debug.LogFormat("[Cookie Jars #{0}] {1}", _moduleId, msg.Replace("\n", " "));
     }
 
-    void CheckCookies()
+    void CheckCookies(int numSolved)
     {
         for (int i = 0; i < 3; i++)
         {
@@ -345,22 +336,22 @@ public class cookieJarsScript : MonoBehaviour {
                     correctBtns[i] = true;
                 }
 
-                else if (cookies[i] == 6 && lastEaten % 2 == Info.GetSolvedModuleNames().Count() % 2)
+                else if (cookies[i] == 6 && lastEaten % 2 == numSolved % 2)
                 {
                     correctBtns[i] = true;
                 }
 
-                else if (cookies[i] == 7 && lastEaten % 2 != Info.GetSolvedModuleNames().Count() % 2)
+                else if (cookies[i] == 7 && lastEaten % 2 != numSolved % 2)
                 {
                     correctBtns[i] = true;
                 }
 
-                else if (cookies[i] == 8 && cookieAmounts[i] % 2 == Info.GetSolvedModuleNames().Count() % 2)
+                else if (cookies[i] == 8 && cookieAmounts[i] % 2 == numSolved % 2)
                 {
                     correctBtns[i] = true;
                 }
 
-                else if (cookies[i] == 9 && cookieAmounts[i] % 2 != Info.GetSolvedModuleNames().Count() % 2)
+                else if (cookies[i] == 9 && cookieAmounts[i] % 2 != numSolved % 2)
                 {
                     correctBtns[i] = true;
                 }
@@ -390,7 +381,7 @@ public class cookieJarsScript : MonoBehaviour {
             DebugMsg("Can " + cookieNames[cookies[i]] + " be eaten? " + correctBtns[i]);
         }
     }
-        
+
     private void Update()
     {
         if (Info.GetSolvedModuleNames().Count > solves && !solved)
@@ -458,7 +449,7 @@ public class cookieJarsScript : MonoBehaviour {
 
             yield return new WaitForSeconds(.05f);
         }
-       
+
     }
 
     IEnumerator Spin(int spinDirection)
@@ -475,9 +466,43 @@ public class cookieJarsScript : MonoBehaviour {
         }
     }
 
-    public string TwitchHelpMessage = "!{0} cycle will cycle through the jars. !{0} eat will eat a cookie from the jar. !{0} left/!{0} right move to the left/right jars respectively.";
+    //twitch plays
+#pragma warning restore 414
+    private readonly string TwitchHelpMessage = @"!{0} cycle will cycle through the jars. !{0} eat will eat a cookie from the jar. !{0} left/!{0} right move to the left/right jars respectively.";
+#pragma warning restore 414
     IEnumerator ProcessTwitchCommand(string cmd)
     {
+        if (Regex.IsMatch(cmd, @"^\s*cycle\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            right.OnInteract();
+            yield return new WaitForSeconds(2.5f);
+            right.OnInteract();
+            yield return new WaitForSeconds(2.5f);
+            right.OnInteract();
+            yield return new WaitForSeconds(1.0f);
+            yield break;
+        }
+        if (Regex.IsMatch(cmd, @"^\s*eat\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            jar.OnInteract();
+            yield break;
+        }
+        if (Regex.IsMatch(cmd, @"^\s*left\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            left.OnInteract();
+            yield break;
+        }
+        if (Regex.IsMatch(cmd, @"^\s*right\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            yield return null;
+            right.OnInteract();
+            yield break;
+        }
+
+        /** old tp code
         if (cmd.ToLowerInvariant() == "cycle")
         {
             yield return null;
@@ -510,7 +535,21 @@ public class cookieJarsScript : MonoBehaviour {
         else
         {
             yield break;
-        }
+        }*/
+    }
+
+    IEnumerator TwitchHandleForcedSolve()
+    {
+        yield return null;
+        jarText.text = "GG!";
+        cookieAmountText.text = "[ No cookies!!! D: ]";
+
+        leds[0].material = lit;
+        leds[1].material = lit;
+        leds[2].material = lit;
+        leds[3].material = lit;
+        leds[4].material = lit;
+        solved = true;
     }
 
     void ForceCookies(int cookie1, int cookie2, int cookie3)
