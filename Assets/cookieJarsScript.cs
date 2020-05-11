@@ -37,6 +37,7 @@ public class cookieJarsScript : MonoBehaviour
     int solves = 0;
     private readonly string[] ignoredModulesList = { "Forget Me Not", "Forget Everything", "Souvenir", "The Time Keeper", "Turn the Key", "The Swan", "Simon's Stages", "Cookie Jars" };
     private string[] ignoredModules { get { return Boss.GetIgnoredModules(Module, ignoredModulesList); } }
+    private bool tpCorrect = false;
 
     void Start()
     {
@@ -104,7 +105,7 @@ public class cookieJarsScript : MonoBehaviour
             {
                 lastLastEaten = lastEaten;
                 lastEaten = cookies[shownJar];
-
+                tpCorrect = true;
                 DebugMsg("You ate a " + debugCookies[cookies[shownJar]] + " cookie. That was right!");
                 cookieAmounts[shownJar]--;
                 hunger = 0;
@@ -487,6 +488,11 @@ public class cookieJarsScript : MonoBehaviour
         {
             yield return null;
             jar.OnInteract();
+            if (tpCorrect)
+            {
+                yield return "awardpoints 1";
+                tpCorrect = false;
+            }
             yield break;
         }
         if (Regex.IsMatch(cmd, @"^\s*left\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
